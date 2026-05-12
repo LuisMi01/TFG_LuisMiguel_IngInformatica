@@ -1,0 +1,28 @@
+# Configuración por defecto del sistema de análisis de riesgo.
+# Estos parámetros pueden ser sobrescritos en cada análisis concreto.
+
+market:
+  trading_days_year: 252
+  default_confidence: 0.95
+  default_risk_free: 0.0361      # BCE 2024: 3,61% anual
+
+data:
+  default_start_date: "2015-01-01"
+  default_end_date: "2025-12-31"
+  benchmark_ticker: "SPY"
+  min_observations: 252          # Mínimo para métricas fiables
+
+reproducibility:
+  random_seed: 42
+
+# Demo de referencia — utilizada por notebooks/01_demo_completo.py
+demo_portfolio:
+  name: "Cartera Demo Internacional"
+  tickers: ["ITX.MC", "AMZN", "TTWO", "ANA", "GLD"]
+  weights: [0.30, 0.25, 0.15, 0.20, 0.10]
+  start_date: "2018-01-01"
+  end_date: "2024-12-31"
+  return_type: "log"
+  monte_carlo:
+    n_sims: 1000
+    days: 252

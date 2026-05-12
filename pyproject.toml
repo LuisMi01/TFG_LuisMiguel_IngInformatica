@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "riskpkg"
+version = "0.4.0"
+description = "Sistema de Análisis y Gestión del Riesgo Financiero en Carteras Multi-Activo"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Luis Miguel Urbez Villar" },
+]
+keywords = [
+    "risk-management",
+    "portfolio-analysis",
+    "value-at-risk",
+    "expected-shortfall",
+    "garch",
+    "monte-carlo",
+    "tfg",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "yfinance>=0.2.40",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "arch>=6.3",
+    "statsmodels>=0.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+]
+notebooks = [
+    "jupyter>=1.0",
+    "ipykernel>=6.29",
+]
+
+[project.urls]
+Repository = "https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+riskpkg = ["py.typed"]
+
+# ── Configuración de herramientas ──────────────────────────────────────────
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # line-too-long: gestionado por el formateador

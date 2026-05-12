@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter / Colab
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data cache (no comitear datos descargados de yfinance)
+data_cache/
+*.parquet
+*.csv.gz
+.cache/
+
+# Outputs locales (gráficos generados durante experimentación)
+outputs/
+figures/local/
