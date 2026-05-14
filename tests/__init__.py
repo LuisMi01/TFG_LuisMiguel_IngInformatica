@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Suite de tests del paquete riskpkg.
 
