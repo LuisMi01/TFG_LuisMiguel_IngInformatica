@@ -18,7 +18,7 @@ El paquete se organiza en cuatro capas con responsabilidades estrictamente separ
 src/riskpkg/
 ├── data/        ← Capa de acceso a datos       (yfinance · CSV · log/simple returns)
 ├── metrics/     ← Capa de lógica de negocio    (VaR · ES · Sharpe · Kupiec · MRC · Alpha/Beta)
-├── models/      ← Capa de modelado IA          (GARCH · GJR-GARCH · Isolation Forest · RF · Monte Carlo)
+├── models/      ← Capa de modelado IA          (GARCH · GJR-GARCH · Isolation Forest · RF · Monte Carlo · EVT-POT/GPD)
 ├── stress/      ← Stress testing               (Histórico · Hipotético · Reverse-Mahalanobis)
 ├── levels/      ← Orquestación funcional       (Niveles 1, 2, 3, 4)
 ├── viz/         ← Capa de presentación         (matplotlib · seaborn)
@@ -76,6 +76,7 @@ RiskVisualizer.plot_monte_carlo(portfolio._mc_results)
 ```
 
 Demo integral de los cuatro niveles: ver [`notebooks/01_demo_completo.py`](notebooks/01_demo_completo.py).
+Demo del módulo de stress testing: ver [`notebooks/06_stress_testing.py`](notebooks/06_stress_testing.py).
 
 ---
 
@@ -84,7 +85,8 @@ Demo integral de los cuatro niveles: ver [`notebooks/01_demo_completo.py`](noteb
 - [x] Refactorización a paquete modular (v0.3.0)
 - [x] Compatibilidad con la API del monolito v2 vía clases fachada
 - [x] **Módulo de stress testing (v0.4.0)** — histórico (8 escenarios), hipotético (EBA, CCAR + custom), reverse (Mahalanobis-óptimo)
-- [ ] Suite de tests con pytest y CI
+- [x] **Suite de tests con pytest y CI (v0.5.0)** — 109 tests offline, GitHub Actions matrix Ubuntu × [3.11/3.12/3.13] + Windows × 3.11
+- [x] **EVT-POT / GPD (v0.5.0)** — VaR y ES con colas pesadas, MLE+PWM, Anderson-Darling, comparación con métodos clásicos
 - [ ] DCC-GARCH para correlaciones dinámicas
 - [ ] HMM para detección de regímenes
 - [ ] SHAP sobre Random Forest

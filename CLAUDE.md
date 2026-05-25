@@ -26,7 +26,7 @@ Paquete Python instalable (`pip install -e .`) organizado en seis subpaquetes po
 src/riskpkg/
 ├── data/       → Acceso a datos          (DataLoader: yfinance + CSV + log/simple returns)
 ├── metrics/    → Lógica de negocio       (VaR · ES · Sharpe · Kupiec · MRC · Alpha/Beta · diversificación)
-├── models/     → Modelado IA             (GARCH · GJR-GARCH · Isolation Forest · RF · Monte Carlo)
+├── models/     → Modelado IA             (GARCH · GJR-GARCH · Isolation Forest · RF · Monte Carlo · EVT-POT/GPD)
 ├── stress/     → Stress testing          (Histórico · Hipotético EBA/CCAR · Reverse-Mahalanobis)
 ├── levels/     → Orquestación funcional  (Niveles 1, 2, 3, 4)
 ├── viz/        → Presentación            (matplotlib + seaborn)
@@ -39,21 +39,25 @@ src/riskpkg/
 3. Cartera diversificada (+ benchmark + IA + Monte Carlo)
 4. Patrimonio global (incluye activos no financieros: inmuebles, bonos no cotizados, alternativos)
 
-## 3. Estado actual (v0.4.0)
+## 3. Estado actual (v0.5.0)
+
+> Nota sobre el mapeo a la memoria: las subsecciones del bloque 6 cambiaron
+> durante la redacción. Aquí indicamos "bloque 6" sin subdividir; cada item
+> apunta a la viñeta concreta de ese bloque cuando es relevante.
 
 Completado y verificado:
 - ✅ Refactor del monolito original `risk_system_v2.py` (1.790 líneas) a paquete modular.
 - ✅ Fachadas `RiskMetrics` y `AI_ModelingLayer` que reexportan funciones puras → mantienen API histórica sin tocar Level1-4.
 - ✅ Módulo `stress` completo: 8 escenarios históricos (dot-com, GFC, Eurozona 2011, China 2015, Volmageddon, COVID, 2022, SVB), 4 shocks predefinidos (EBA Adverse, CCAR Severely Adverse, estanflación, +200pb), reverse stress test con solución cerrada de Mahalanobis (Breuer & Csiszár 2013).
+- ✅ **Suite pytest** (109 tests, offline, fixtures sintéticas con `RANDOM_SEED=42`) + **GitHub Actions CI** (matrix Ubuntu × [3.11/3.12/3.13] + Windows × 3.11) sin gate de cobertura.
+- ✅ **Módulo EVT-POT** en `models/evt.py`: ajuste GPD por MLE con fallback PWM, fórmulas cerradas de VaR/ES, diagnóstico Anderson-Darling, función `compare_var_methods` (paramétrico vs histórico vs EVT). Cierra la viñeta de leptocurtosis/normalidad del bloque 6 de la memoria.
 - ✅ Notebooks `01_demo_completo.py` y `06_stress_testing.py` reproducen el sistema completo en Colab.
 
 Pendiente (orden propuesto):
-- ⏳ Suite de tests con pytest + GitHub Actions CI
-- ⏳ DCC-GARCH (correlaciones dinámicas) — cierra limitación 6.1 de la memoria
-- ⏳ EVT-POT (colas pesadas) — cierra limitación 6.2 de la memoria
-- ⏳ HMM (regímenes de mercado) + SHAP sobre Random Forest (interpretabilidad)
-- ⏳ Dashboard Streamlit desplegado en Streamlit Community Cloud
-- ⏳ Actualización de la memoria TFG (Word) reflejando arquitectura modular y módulo stress
+- ⏳ DCC-GARCH (correlaciones dinámicas) — cierra la viñeta de estacionariedad de covarianzas del bloque 6. *Aplazado el 2026-05-15* tras evaluar el ecosistema Python (ver `memory/dcc_garch_decision.md`); plan al retomar: implementación propia sobre `arch` (~120 líneas).
+- ⏳ HMM (regímenes de mercado) + SHAP sobre Random Forest (interpretabilidad) — cierra la viñeta de interpretabilidad del bloque 6.
+- ⏳ Dashboard Streamlit desplegado en Streamlit Community Cloud.
+- ⏳ Actualización de la memoria TFG (Word) reflejando arquitectura modular, módulo stress, suite de tests y EVT-POT.
 
 ## 4. Convenciones de código
 
@@ -123,4 +127,4 @@ Pasos obligados antes de proponer un refactor o modificación sustancial:
 
 ---
 
-*Última actualización del fichero: tras añadir el módulo de stress testing (v0.4.0).*
+*Última actualización del fichero: tras añadir EVT-POT, suite pytest y CI (v0.5.0, 2026-05-15).*

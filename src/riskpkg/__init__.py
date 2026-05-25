@@ -26,7 +26,7 @@ Quickstart:
     >>> portfolio.print_report()
 """
 
-__version__ = "0.4.0"  # 0.4 = añade módulo stress (histórico + hipotético + reverse)
+__version__ = "0.5.0"  # 0.5 = añade EVT-POT (GPD) + suite pytest + CI
 
 # ── Re-exports de alto nivel para uso conveniente ──────────────────────────
 from .data import DataLoader

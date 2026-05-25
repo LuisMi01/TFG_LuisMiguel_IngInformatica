@@ -136,3 +136,20 @@ def returns_no_recovery() -> pd.Series:
     ]
     arr = np.concatenate(parts)
     return pd.Series(arr, index=_business_index(len(arr)), name="returns")
+
+
+@pytest.fixture
+def heavy_tailed_returns() -> pd.Series:
+    """
+    Retornos con cola pesada (t-Student de 3 grados de libertad, escalados
+    a vol diaria realista). El índice de cola teórico bajo t(ν) es ξ = 1/ν,
+    así que esperamos ξ ≈ 0.33 al ajustar GPD sobre las pérdidas. Usado
+    para validar que EVT-POT detecta colas más pesadas que las del
+    fixture gaussiano ``daily_returns_long``.
+    """
+    rng_local = np.random.default_rng(RANDOM_SEED + 5)
+    # t-Student tiene Var = ν/(ν-2); reescalamos a sigma_objetivo
+    raw = rng_local.standard_t(df=3, size=N_DAYS_LONG)
+    raw_std = raw / np.sqrt(3 / 1)  # equivale a Var=1
+    r = MU_DAILY + SIGMA_DAILY * raw_std
+    return pd.Series(r, index=_business_index(N_DAYS_LONG), name="heavy_returns")

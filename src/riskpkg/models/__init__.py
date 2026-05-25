@@ -12,6 +12,14 @@ from .factor_importance import (
     compare_risk_attribution,
 )
 from .monte_carlo import monte_carlo_simulation
+from .evt import (
+    mean_excess,
+    select_threshold,
+    fit_gpd,
+    evt_var_es,
+    evt_report,
+    compare_var_methods,
+)
 
 
 class AI_ModelingLayer:
@@ -23,6 +31,7 @@ class AI_ModelingLayer:
       · Isolation Forest              — detección de anomalías
       · Random Forest                 — importancia de factores de riesgo
       · Monte Carlo multivariante     — proyección probabilística de cartera
+      · EVT-POT (GPD)                 — VaR/ES extremos con colas pesadas
 
     Todos los métodos son estáticos y no almacenan estado.
     """
@@ -33,6 +42,14 @@ class AI_ModelingLayer:
     compare_risk_attribution    = staticmethod(compare_risk_attribution)
     monte_carlo_simulation      = staticmethod(monte_carlo_simulation)
 
+    # EVT-POT
+    mean_excess                 = staticmethod(mean_excess)
+    select_threshold            = staticmethod(select_threshold)
+    fit_gpd                     = staticmethod(fit_gpd)
+    evt_var_es                  = staticmethod(evt_var_es)
+    evt_report                  = staticmethod(evt_report)
+    compare_var_methods         = staticmethod(compare_var_methods)
+
 
 __all__ = [
     # Funciones puras
@@ -41,6 +58,12 @@ __all__ = [
     "rf_risk_factor_importance",
     "compare_risk_attribution",
     "monte_carlo_simulation",
+    "mean_excess",
+    "select_threshold",
+    "fit_gpd",
+    "evt_var_es",
+    "evt_report",
+    "compare_var_methods",
     # Fachada
     "AI_ModelingLayer",
     # Flags

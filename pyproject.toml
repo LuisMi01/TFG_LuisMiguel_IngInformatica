@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "riskpkg"
-version = "0.4.0"
+version = "0.5.0"
 description = "Sistema de Análisis y Gestión del Riesgo Financiero en Carteras Multi-Activo"
 readme = "README.md"
 requires-python = ">=3.11"
