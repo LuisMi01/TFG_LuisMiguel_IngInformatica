@@ -87,9 +87,6 @@ Demo del módulo de stress testing: ver [`notebooks/06_stress_testing.py`](noteb
 - [x] **Módulo de stress testing (v0.4.0)** — histórico (8 escenarios), hipotético (EBA, CCAR + custom), reverse (Mahalanobis-óptimo)
 - [x] **Suite de tests con pytest y CI (v0.5.0)** — 109 tests offline, GitHub Actions matrix Ubuntu × [3.11/3.12/3.13] + Windows × 3.11
 - [x] **EVT-POT / GPD (v0.5.0)** — VaR y ES con colas pesadas, MLE+PWM, Anderson-Darling, comparación con métodos clásicos
-- [ ] DCC-GARCH para correlaciones dinámicas
-- [ ] HMM para detección de regímenes
-- [ ] SHAP sobre Random Forest
 - [ ] Dashboard Streamlit
 
 ---
@@ -100,6 +97,13 @@ Todos los componentes estocásticos (Random Forest, Isolation Forest,
 Monte Carlo) usan la semilla global `RANDOM_SEED = 42` definida en
 `riskpkg.utils.constants`. Las ejecuciones sucesivas con los mismos parámetros
 producen resultados idénticos bit a bit.
+
+---
+
+## Futuros añadidos técnicos al sistema
+- [ ] DCC-GARCH para correlaciones dinámicas
+- [ ] HMM para detección de regímenes
+- [ ] SHAP sobre Random Forest
 
 ---
 
