@@ -52,9 +52,12 @@ def show_matplotlib(plot_fn, *args, **kwargs) -> None:
 
     Las funciones de ``RiskVisualizer`` devuelven ``None`` y llaman a
     ``plt.show()`` (ver API_MAP.md §6/D2). Aquí las invocamos, capturamos la
-    figura activa y la cerramos para no acumular memoria.
+    figura activa y la cerramos inmediatamente para evitar fugas entre páginas
+    bajo el modelo de rerun de Streamlit (las páginas además llaman
+    ``plt.close("all")`` al inicio para barrer cualquier residuo).
     """
     plot_fn(*args, **kwargs)
     fig = plt.gcf()
     st.pyplot(fig)
+    plt.close(fig)
     plt.close("all")
