@@ -58,6 +58,11 @@ data_cache/
 *.csv.gz
 .cache/
 
+# Excepción: las series demo de la web SÍ se commitean para que el modo demo
+# offline funcione tras un git clone limpio (ver docs/API_MAP.md D8).
+!web/data_cache/
+!web/data_cache/*.parquet
+
 # Outputs locales (gráficos generados durante experimentación)
 outputs/
 figures/local/
