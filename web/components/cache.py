@@ -17,7 +17,19 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 from riskpkg.data import DataLoader
-from riskpkg.levels import Level1_AssetAnalyzer, Level2_FundAnalyzer
+from riskpkg.levels import (
+    Level1_AssetAnalyzer,
+    Level2_FundAnalyzer,
+    Level3_PortfolioAnalyzer,
+)
+from riskpkg.stress import (
+    FactorShock,
+    apply_shock,
+    historical_stress_battery,
+    historical_stress_test,
+    reverse_stress_curve,
+    reverse_stress_test,
+)
 
 from . import demo_data
 
@@ -156,4 +168,223 @@ def analyze_level2(
         div_benefit=float(lvl2._div_benefit),
         weights_effective=tuple(float(w) for w in lvl2.weights_effective),
         tickers_effective=tickers_eff,
+    )
+
+
+@dataclass
+class Level3Result:
+    """Foto serializable de ``Level3_PortfolioAnalyzer`` tras ``run()``.
+
+    Reúne todo lo que consumen el notebook 01 (vitrina principal) y la
+    página de stress (que necesita ``asset_returns`` y ``weights_effective``
+    para el reverse).
+    """
+
+    portfolio_name: str
+    benchmark: str
+    port_metrics: dict
+    bench_metrics: Optional[dict]
+    alpha_beta: Optional[tuple[float, float]]
+    tracking_error: Optional[float]
+    info_ratio: Optional[float]
+    r_squared: Optional[float]
+    up_down_capture: Optional[tuple[float, float]]
+    kupiec: dict
+    div_ratio: float
+    mrc: pd.Series
+    prc: pd.Series
+    corr_matrix: pd.DataFrame
+    anomalies: pd.Series
+    rf_results: dict
+    spearman: dict
+    mc_results: dict
+    asset_returns: pd.DataFrame
+    port_returns: pd.Series
+    bench_returns: Optional[pd.Series]
+    weights_effective: tuple[float, ...]
+    tickers_effective: tuple[str, ...]
+
+
+@st.cache_data(show_spinner=False)
+def analyze_level3(
+    tickers: tuple[str, ...],
+    weights: tuple[float, ...],
+    start: str,
+    end: str,
+    source: str,
+    return_type: str = "log",
+    benchmark: str = "SPY",
+    portfolio_name: str = "Cartera",
+    mc_sims: int = 1000,
+    mc_days: int = 252,
+) -> Level3Result:
+    """Ejecuta ``Level3_PortfolioAnalyzer.run()`` y devuelve sus atributos."""
+    ensure_data_source(source)
+    lvl3 = Level3_PortfolioAnalyzer(
+        tickers=list(tickers),
+        weights=list(weights),
+        portfolio_name=portfolio_name,
+        benchmark=benchmark,
+        start_date=start,
+        end_date=end,
+        return_type=return_type,
+        mc_sims=mc_sims,
+        mc_days=mc_days,
+    ).run()
+    return Level3Result(
+        portfolio_name=portfolio_name,
+        benchmark=benchmark,
+        port_metrics=lvl3._port_metrics,
+        bench_metrics=lvl3._bench_metrics,
+        alpha_beta=(
+            (float(lvl3._alpha_beta[0]), float(lvl3._alpha_beta[1]))
+            if lvl3._alpha_beta is not None
+            else None
+        ),
+        tracking_error=(
+            float(lvl3._tracking_error) if lvl3._tracking_error is not None else None
+        ),
+        info_ratio=(
+            float(lvl3._info_ratio) if lvl3._info_ratio is not None else None
+        ),
+        r_squared=float(lvl3._r2) if lvl3._r2 is not None else None,
+        up_down_capture=(
+            (float(lvl3._up_down_capture[0]), float(lvl3._up_down_capture[1]))
+            if lvl3._up_down_capture is not None
+            else None
+        ),
+        kupiec=lvl3._kupiec or {},
+        div_ratio=float(lvl3._div_ratio),
+        mrc=lvl3._mrc,
+        prc=lvl3._prc,
+        corr_matrix=lvl3._corr_matrix,
+        anomalies=lvl3._anomalies,
+        rf_results=lvl3._rf_results,
+        spearman=lvl3._spearman,
+        mc_results=lvl3._mc_results,
+        asset_returns=lvl3.asset_returns,
+        port_returns=lvl3.port_returns,
+        bench_returns=lvl3.bench_returns,
+        weights_effective=tuple(float(w) for w in lvl3.weights_effective),
+        tickers_effective=tuple(lvl3.asset_returns.columns.tolist()),
+    )
+
+
+# ── Stress testing wrappers ─────────────────────────────────────────────────
+
+
+@st.cache_data(show_spinner=False)
+def run_historical_stress(
+    tickers: tuple[str, ...],
+    weights: tuple[float, ...],
+    scenario_key: str,
+    source: str,
+    return_type: str = "log",
+    initial_value: float = 100_000.0,
+) -> dict:
+    """Wraps ``historical_stress_test`` con caché. Descarga la ventana en demo."""
+    ensure_data_source(source)
+    return historical_stress_test(
+        tickers=list(tickers),
+        weights=list(weights),
+        scenario=scenario_key,
+        return_type=return_type,
+        initial_value=initial_value,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_historical_battery(
+    tickers: tuple[str, ...],
+    weights: tuple[float, ...],
+    source: str,
+    return_type: str = "log",
+    initial_value: float = 100_000.0,
+) -> pd.DataFrame:
+    """Wraps ``historical_stress_battery``. Ejecuta los 8 escenarios."""
+    ensure_data_source(source)
+    return historical_stress_battery(
+        tickers=list(tickers),
+        weights=list(weights),
+        return_type=return_type,
+        initial_value=initial_value,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_predefined_shock(
+    tickers: tuple[str, ...],
+    weights: tuple[float, ...],
+    shock_key: str,
+    ticker_to_class: tuple[tuple[str, str], ...],
+    initial_value: float = 100_000.0,
+) -> dict:
+    """Wraps ``apply_shock`` para shocks predefinidos. **No descarga datos.**"""
+    return apply_shock(
+        weights=list(weights),
+        tickers=list(tickers),
+        shock=shock_key,
+        ticker_to_class=dict(ticker_to_class),
+        initial_value=initial_value,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_custom_shock(
+    tickers: tuple[str, ...],
+    weights: tuple[float, ...],
+    ticker_to_class: tuple[tuple[str, str], ...],
+    name: str,
+    class_shocks: tuple[tuple[str, float], ...],
+    ticker_overrides: tuple[tuple[str, float], ...] = (),
+    default_shock: float = 0.0,
+    description: str = "",
+    initial_value: float = 100_000.0,
+) -> dict:
+    """Wraps ``apply_shock`` para un ``FactorShock`` instanciado a medida."""
+    shock = FactorShock(
+        name=name,
+        class_shocks=dict(class_shocks),
+        ticker_overrides=dict(ticker_overrides),
+        default_shock=default_shock,
+        description=description,
+    )
+    return apply_shock(
+        weights=list(weights),
+        tickers=list(tickers),
+        shock=shock,
+        ticker_to_class=dict(ticker_to_class),
+        initial_value=initial_value,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_reverse_test(
+    asset_returns: pd.DataFrame,
+    weights: tuple[float, ...],
+    target_loss: float,
+    horizon: str = "annual",
+) -> dict:
+    """Wraps ``reverse_stress_test``. Recibe ``asset_returns`` ya cargados."""
+    return reverse_stress_test(
+        asset_returns=asset_returns,
+        weights=list(weights),
+        target_loss=target_loss,
+        horizon=horizon,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_reverse_curve(
+    asset_returns: pd.DataFrame,
+    weights: tuple[float, ...],
+    losses: tuple[float, ...] = (0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50),
+    horizon: str = "annual",
+) -> pd.DataFrame:
+    """Wraps ``reverse_stress_curve``."""
+    return reverse_stress_curve(
+        asset_returns=asset_returns,
+        weights=list(weights),
+        losses=list(losses),
+        horizon=horizon,
     )
