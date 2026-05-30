@@ -49,6 +49,52 @@ ASSET_CLASSES = ["equity", "fixed_income", "real_estate", "commodity", "alternat
 LIQUIDITY_LEVELS = ["liquid", "semi_liquid", "illiquid"]
 
 
+def default_non_financial_assets() -> list["NonFinancialAsset"]:
+    """Espejo de ``non_financial_assets`` del notebook ``01_demo_completo.py``.
+
+    Sirve como preset de partida para Nivel 4 — el usuario puede editar la
+    lista directamente desde la página.
+    """
+    return [
+        NonFinancialAsset(
+            name="Inmueble Madrid",
+            value=350_000,
+            asset_class="real_estate",
+            liquidity="illiquid",
+            est_volatility=0.06,
+            annual_return_est=0.03,
+            corr_market=0.25,
+        ),
+        NonFinancialAsset(
+            name="Bono Tesoro 10Y",
+            value=100_000,
+            asset_class="fixed_income",
+            liquidity="semi_liquid",
+            est_volatility=0.04,
+            annual_return_est=0.035,
+            corr_market=-0.20,
+        ),
+        NonFinancialAsset(
+            name="Fondo Infraestructuras",
+            value=75_000,
+            asset_class="alternative",
+            liquidity="illiquid",
+            est_volatility=0.08,
+            annual_return_est=0.05,
+            corr_market=0.40,
+        ),
+        NonFinancialAsset(
+            name="Efectivo / Depósitos",
+            value=30_000,
+            asset_class="cash",
+            liquidity="liquid",
+            est_volatility=0.0,
+            annual_return_est=0.025,
+            corr_market=0.0,
+        ),
+    ]
+
+
 @dataclass
 class NonFinancialAsset:
     """Activo no financiero introducido a mano (solo Nivel 4).

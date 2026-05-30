@@ -21,6 +21,7 @@ from riskpkg.levels import (
     Level1_AssetAnalyzer,
     Level2_FundAnalyzer,
     Level3_PortfolioAnalyzer,
+    Level4_PatrimonyAnalyzer,
 )
 from riskpkg.stress import (
     FactorShock,
@@ -388,3 +389,149 @@ def run_reverse_curve(
         losses=list(losses),
         horizon=horizon,
     )
+
+
+# ── Nivel 4 — patrimonio global + rescalado de presentación (D4) ────────────
+
+#: Valor financiero de referencia que ``riskpkg.Level4_PatrimonyAnalyzer``
+#: hardcodea internamente (ver docs/API_MAP.md §5/D5). Sirve como denominador
+#: para invertir el ``+= fin_value_ref`` que hace ``riskpkg`` en
+#: ``by_class['equity']`` y ``by_liquidity['liquid']``.
+RISKPKG_FIN_VALUE_REF = 1_000_000.0
+
+
+@dataclass
+class Level4Result:
+    """Foto serializable del análisis de Nivel 4 **tras rescalar** las cifras
+    de agregación patrimonial al ``real_value`` indicado por el usuario.
+
+    Las métricas financieras (``financial_metrics``) son las que devuelve
+    ``riskpkg`` y NO se tocan — sólo dependen de la serie de retornos.
+
+    Las cifras agregadas (``total_value``, ``fin_weight``,
+    ``nf_items[].weight/risk_contrib``, ``var_patrimonial``,
+    ``by_class``, ``by_liquidity``) se reescriben aplicando la **misma
+    fórmula** que ``Level4_PatrimonyAnalyzer.run()`` pero con
+    ``fin_value_ref = real_value`` en lugar del 1 M€ hardcoded.
+
+    El campo ``original_fin_value_ref`` se conserva para que la UI pueda
+    explicar el ajuste al usuario.
+    """
+
+    patrimony_name: str
+    real_value: float  # valor monetario real de la cartera financiera (€)
+    original_fin_value_ref: float  # 1_000_000 (lo que riskpkg fija)
+    financial_metrics: dict
+    nf_total_value: float
+    total_value: float
+    fin_weight: float
+    nf_items: list[dict]
+    var_patrimonial: float
+    by_class: dict[str, float]
+    by_liquidity: dict[str, float]
+
+
+def _rescale_level4(results: dict, real_value: float) -> Level4Result:
+    """Aplica el rescalado de presentación a ``Level4_PatrimonyAnalyzer._results``.
+
+    Reproduce **bit a bit** las fórmulas internas de ``riskpkg`` con
+    ``fin_value_ref = real_value``. Por construcción, si
+    ``real_value == 1_000_000`` el resultado es idéntico al original.
+    """
+    original_ref = float(results["fin_value_ref"])
+    nf_total = float(results["nf_total_value"])
+    total_new = real_value + nf_total
+    fin_weight_new = real_value / total_new if total_new > 0 else 1.0
+
+    # nf_items: recalcula peso y contribución al riesgo con el nuevo total.
+    new_items: list[dict] = []
+    for it in results["nf_items"]:
+        value = float(it["value"])
+        w_new = value / total_new if total_new > 0 else 0.0
+        new_items.append(
+            {
+                "name": it["name"],
+                "class": it["class"],
+                "liquidity": it["liquidity"],
+                "value": value,
+                "weight": w_new,
+                "vol_est": float(it["vol_est"]),
+                "return_est": float(it["return_est"]),
+                "corr_mkt": float(it["corr_mkt"]),
+                "risk_contrib": w_new * float(it["vol_est"]) * float(it["corr_mkt"]),
+            }
+        )
+
+    fm = results["financial_metrics"]
+    var_pat_new = fin_weight_new * float(fm["var_hist_95"]) + sum(
+        it["risk_contrib"] * 1.645 for it in new_items
+    )
+
+    # Invertir el `+= fin_value_ref` que riskpkg suma al bucket
+    # equity / liquid, y volver a sumar el valor real.
+    by_class_new = {k: float(v) for k, v in results["by_class"].items()}
+    by_class_new["equity"] = by_class_new.get("equity", 0.0) - original_ref + real_value
+
+    by_liquidity_new = {k: float(v) for k, v in results["by_liquidity"].items()}
+    by_liquidity_new["liquid"] = (
+        by_liquidity_new.get("liquid", 0.0) - original_ref + real_value
+    )
+
+    return Level4Result(
+        patrimony_name=results["patrimony_name"],
+        real_value=real_value,
+        original_fin_value_ref=original_ref,
+        financial_metrics=fm,
+        nf_total_value=nf_total,
+        total_value=total_new,
+        fin_weight=fin_weight_new,
+        nf_items=new_items,
+        var_patrimonial=var_pat_new,
+        by_class=by_class_new,
+        by_liquidity=by_liquidity_new,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def analyze_level4(
+    tickers: tuple[str, ...],
+    weights: tuple[float, ...],
+    start: str,
+    end: str,
+    source: str,
+    benchmark: str,
+    portfolio_name: str,
+    mc_sims: int,
+    mc_days: int,
+    return_type: str,
+    non_financial_assets: tuple[tuple[tuple[str, object], ...], ...],
+    patrimony_name: str,
+    real_value: float = RISKPKG_FIN_VALUE_REF,
+) -> Level4Result:
+    """Ejecuta el pipeline completo Nivel 3 → Nivel 4 y aplica rescalado D4.
+
+    ``non_financial_assets`` se acepta como tupla-de-tuplas para que la caché
+    de Streamlit pueda hashearla; cada item se reconstruye a ``dict`` justo
+    antes de pasar a ``riskpkg``.
+    """
+    ensure_data_source(source)
+    lvl3 = Level3_PortfolioAnalyzer(
+        tickers=list(tickers),
+        weights=list(weights),
+        portfolio_name=portfolio_name,
+        benchmark=benchmark,
+        start_date=start,
+        end_date=end,
+        return_type=return_type,
+        mc_sims=mc_sims,
+        mc_days=mc_days,
+    ).run()
+
+    nf_list = [dict(item) for item in non_financial_assets]
+    lvl4 = Level4_PatrimonyAnalyzer(
+        financial_portfolio=lvl3,
+        non_financial_assets=nf_list,
+        patrimony_name=patrimony_name,
+    ).run()
+
+    return _rescale_level4(lvl4._results, real_value=real_value)
