@@ -45,44 +45,113 @@ Streamlit** (recorrido visual de los cuatro niveles), los **notebooks**
 
 ### 1 · Requisitos
 
-- Python **3.11** o superior (probado en 3.11, 3.12 y 3.13).
-- `pip` y, opcionalmente, `git` para clonar el repositorio.
+- **Python 3.11** (versión de referencia del proyecto; también validado en
+  CI sobre 3.12 y 3.13). Se desaconseja 3.14: varias dependencias
+  compiladas (`arch`, `statsmodels`, `scipy`) aún no publican wheels para
+  esa versión y se compilarían desde fuentes.
+- `git` para clonar el repositorio.
 - Conexión a internet sólo si se quieren descargar precios reales con
   `yfinance`; los notebooks y el dashboard incluyen modo demo offline.
+- *(Opcional pero recomendado)* [`uv`](https://docs.astral.sh/uv/) —
+  gestor de entornos y paquetes que descarga Python 3.11 automáticamente
+  y evita los problemas de [PEP 668](https://peps.python.org/pep-0668/)
+  habituales en Arch/Debian/macOS con Homebrew.
 
 ### 2 · Instalación
+
+Punto de partida común a los dos sistemas operativos:
 
 ```bash
 git clone https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica.git
 cd TFG_LuisMiguel_IngInformatica
-
-# Entorno virtual aislado (macOS/Linux)
-python -m venv .venv && source .venv/bin/activate
-
-# Paquete en modo editable + extras de desarrollo y notebooks
-pip install -e ".[dev,notebooks]"
 ```
 
-> **Windows (PowerShell):** sustituir `source .venv/bin/activate` por
-> `.\.venv\Scripts\Activate.ps1`.
+A partir de aquí, elige el bloque correspondiente a tu sistema. En ambos
+casos se proponen dos rutas: con **`uv`** (recomendada — pinea Python
+3.11 y bypassa PEP 668) y con **`venv` + `pip` estándar** (para entornos
+donde `uv` no esté disponible).
 
-Comprobación rápida de que el paquete está instalado:
+#### 2.A · Linux / macOS
+
+**Ruta recomendada (uv):**
+
+```bash
+# Si no tienes uv: curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.11 .venv
+
+# Activación según tu shell:
+source .venv/bin/activate           # bash / zsh (default macOS y la mayoría de distros)
+source .venv/bin/activate.fish      # fish
+source .venv/bin/activate.csh       # csh / tcsh
+
+uv pip install -e ".[dev,notebooks]" streamlit
+```
+
+**Ruta alternativa (`python -m venv` + `pip`):**
+
+```bash
+python3.11 -m venv .venv            # requiere Python 3.11 instalado en el sistema
+source .venv/bin/activate           # (o activate.fish en fish)
+pip install -e ".[dev,notebooks]" streamlit
+```
+
+> **Nota — fish:** el script `activate` por defecto **no es compatible
+> con fish** (usa sintaxis `case ... esac` de bash). Usa siempre
+> `activate.fish`.
+>
+> **Nota — Arch Linux / Debian 12+ / macOS con Homebrew:** estos sistemas
+> bloquean `pip install` fuera de un venv (PEP 668, error
+> `externally-managed-environment`). Activa primero el venv y todo
+> funciona; o usa `uv`, que lo gestiona por ti.
+
+#### 2.B · Windows
+
+**Ruta recomendada (uv):**
+
+```powershell
+# Si no tienes uv:  powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv venv --python 3.11 .venv
+
+# Activación (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+uv pip install -e ".[dev,notebooks]" streamlit
+```
+
+**Ruta alternativa (`python -m venv` + `pip`):**
+
+```powershell
+py -3.11 -m venv .venv              # requiere Python 3.11 instalado (instalador oficial python.org)
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev,notebooks]" streamlit
+```
+
+En **CMD** (no PowerShell), el script de activación es
+`.\.venv\Scripts\activate.bat`.
+
+> **Nota — política de ejecución:** si PowerShell rechaza el script con
+> "running scripts is disabled on this system", habilítala una sola vez
+> para el usuario actual:
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
+
+#### Comprobación
+
+Independientemente del sistema, el siguiente smoke test debe imprimir
+`0.5.0`:
 
 ```bash
 python -c "import riskpkg; print(riskpkg.__version__)"
-# → 0.5.0
 ```
 
 ### 3 · Modo A — Dashboard web (Streamlit)
 
 Capa de presentación multipágina que orquesta el paquete `riskpkg` sin
 añadir lógica financiera. Cubre los cuatro niveles y el módulo de stress.
+Streamlit ya quedó instalado en el paso anterior; basta con lanzar la app:
 
 ```bash
-# Streamlit no está en las dependencias base; instalarlo aparte:
-pip install streamlit
-
-# Arrancar la aplicación
 streamlit run web/app.py
 ```
 
