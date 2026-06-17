@@ -36,9 +36,80 @@ src/riskpkg/
 
 ---
 
-## Instalación
+## Cómo ejecutar el código
 
-### Opción A — Google Colab (recomendado para el TFG)
+El sistema se puede usar de tres formas complementarias: el **dashboard
+Streamlit** (recorrido visual de los cuatro niveles), los **notebooks**
+(reproducibilidad académica del TFG) y la **API Python** del paquete
+`riskpkg` (uso programático). Todas comparten el mismo motor de cálculo.
+
+### 1 · Requisitos
+
+- Python **3.11** o superior (probado en 3.11, 3.12 y 3.13).
+- `pip` y, opcionalmente, `git` para clonar el repositorio.
+- Conexión a internet sólo si se quieren descargar precios reales con
+  `yfinance`; los notebooks y el dashboard incluyen modo demo offline.
+
+### 2 · Instalación
+
+```bash
+git clone https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica.git
+cd TFG_LuisMiguel_IngInformatica
+
+# Entorno virtual aislado (macOS/Linux)
+python -m venv .venv && source .venv/bin/activate
+
+# Paquete en modo editable + extras de desarrollo y notebooks
+pip install -e ".[dev,notebooks]"
+```
+
+> **Windows (PowerShell):** sustituir `source .venv/bin/activate` por
+> `.\.venv\Scripts\Activate.ps1`.
+
+Comprobación rápida de que el paquete está instalado:
+
+```bash
+python -c "import riskpkg; print(riskpkg.__version__)"
+# → 0.5.0
+```
+
+### 3 · Modo A — Dashboard web (Streamlit)
+
+Capa de presentación multipágina que orquesta el paquete `riskpkg` sin
+añadir lógica financiera. Cubre los cuatro niveles y el módulo de stress.
+
+```bash
+# Streamlit no está en las dependencias base; instalarlo aparte:
+pip install streamlit
+
+# Arrancar la aplicación
+streamlit run web/app.py
+```
+
+Tras unos segundos se abre el dashboard en `http://localhost:8501`. La
+cartera se configura una sola vez en la **barra lateral** y se propaga a
+todas las páginas:
+
+| Página | Contenido |
+|--------|-----------|
+| **Nivel 1 — Activo** | Volatilidad, VaR/ES, Sharpe/Sortino, drawdown, GARCH/GJR-GARCH, Kupiec |
+| **Nivel 2 — Fondo** | Métricas agregadas, ratio de diversificación, MRC/PRC, matriz de correlación |
+| **Nivel 3 — Cartera** | Análisis vs. benchmark (α/β/R²/TE/IR), Isolation Forest, Random Forest + Spearman, Monte Carlo |
+| **Nivel 4 — Patrimonio** | Integración con activos no financieros, rescalado del notional, descomposición por clase y liquidez |
+| **Stress Testing** | 8 escenarios históricos, 4 hipotéticos (EBA, CCAR, estanflación, +200pb), shock personalizado y reverse stress test |
+
+Por defecto la web arranca en **modo demo offline** con la cartera
+canónica del TFG (`ITX.MC · AMZN · TTWO · ANA · GLD`, 2018-2024). Para
+descargar precios reales basta con cambiar el selector "Origen de datos"
+a "Live (yfinance)" en la barra lateral.
+
+### 4 · Modo B — Notebooks
+
+Los notebooks están en formato `.py` con docstrings entre celdas; se
+abren nativamente en **Google Colab** (recomendado para el TFG) o en
+Jupyter local vía `jupytext`.
+
+**Colab (sin instalación local):**
 
 ```python
 !git clone https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica.git
@@ -46,18 +117,18 @@ src/riskpkg/
 !pip install -q -e .
 ```
 
-### Opción B — Local
+**Local (con el entorno ya instalado):**
 
 ```bash
-git clone https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica.git
-cd TFG_LuisMiguel_IngInformatica
-python -m venv .venv && source .venv/bin/activate   # (macOS/Linux)
-pip install -e ".[dev,notebooks]"
+python notebooks/01_demo_completo.py     # Recorrido completo Nivel 1 → Nivel 4
+python notebooks/06_stress_testing.py    # Stress histórico, hipotético y reverse
 ```
 
----
+`01_demo_completo.py` es la **referencia canónica de correctitud**:
+cualquier output del dashboard o de la API debe coincidir con él bit a
+bit cuando se usa la misma cartera.
 
-## Quickstart
+### 5 · Modo C — Uso programático (API Python)
 
 ```python
 from riskpkg import Level3_PortfolioAnalyzer, RiskVisualizer
@@ -75,8 +146,19 @@ portfolio.print_report()
 RiskVisualizer.plot_monte_carlo(portfolio._mc_results)
 ```
 
-Demo integral de los cuatro niveles: ver [`notebooks/01_demo_completo.py`](notebooks/01_demo_completo.py).
-Demo del módulo de stress testing: ver [`notebooks/06_stress_testing.py`](notebooks/06_stress_testing.py).
+Las clases-fachada (`RiskMetrics`, `AI_ModelingLayer`) reexportan las
+funciones puras y mantienen la API histórica del monolito original.
+
+### 6 · Tests
+
+```bash
+pytest                       # Suite completa (109 tests, offline)
+pytest -k "stress"           # Subconjunto por palabra clave
+pytest --cov=riskpkg         # Con informe de cobertura
+```
+
+La CI ejecuta automáticamente la suite sobre **Ubuntu × {3.11, 3.12,
+3.13}** y **Windows × 3.11** en cada `push` a `main`.
 
 ---
 
@@ -87,7 +169,7 @@ Demo del módulo de stress testing: ver [`notebooks/06_stress_testing.py`](noteb
 - [x] **Módulo de stress testing (v0.4.0)** — histórico (8 escenarios), hipotético (EBA, CCAR + custom), reverse (Mahalanobis-óptimo)
 - [x] **Suite de tests con pytest y CI (v0.5.0)** — 109 tests offline, GitHub Actions matrix Ubuntu × [3.11/3.12/3.13] + Windows × 3.11
 - [x] **EVT-POT / GPD (v0.5.0)** — VaR y ES con colas pesadas, MLE+PWM, Anderson-Darling, comparación con métodos clásicos
-- [ ] Dashboard Streamlit
+- [x] **Dashboard Streamlit** — 5 páginas multipágina cableadas a `riskpkg` (Niveles 1-4 + Stress), modo demo offline y modo live
 
 ---
 
