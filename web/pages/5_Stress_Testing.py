@@ -22,12 +22,14 @@ from riskpkg.stress import HISTORICAL_SCENARIOS, PREDEFINED_SHOCKS  # noqa: E402
 
 from components.cache import (  # noqa: E402
     analyze_level3,
+    assert_minimum_window,
     run_custom_shock,
     run_historical_battery,
     run_historical_stress,
     run_predefined_shock,
     run_reverse_curve,
     run_reverse_test,
+    safe_live_call,
 )
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
@@ -52,6 +54,7 @@ cfg = get_config()
 if len(cfg.tickers) < 2:
     st.warning("El stress testing necesita al menos 2 activos.", icon="⚠️")
     st.stop()
+assert_minimum_window(cfg)
 
 st.caption(
     f"Valor inicial de referencia: **{INITIAL_VALUE:,.0f} €** "
@@ -83,7 +86,9 @@ with tab_hist:
     scenario_key = scenario_options[label]
 
     with st.spinner(f"Cargando ventana '{scenario_key}'…"):
-        res = run_historical_stress(
+        res = safe_live_call(
+            run_historical_stress,
+            cfg,
             tickers=tuple(cfg.tickers),
             weights=tuple(cfg.weights),
             scenario_key=scenario_key,
@@ -134,7 +139,9 @@ with tab_hist:
     st.divider()
     st.subheader("Batería completa (los 8 escenarios)")
     with st.spinner("Ejecutando los 8 escenarios…"):
-        battery = run_historical_battery(
+        battery = safe_live_call(
+            run_historical_battery,
+            cfg,
             tickers=tuple(cfg.tickers),
             weights=tuple(cfg.weights),
             source=cfg.data_source,
@@ -181,7 +188,9 @@ with tab_hyp:
         shock_key = shock_options[label]
         st.caption(PREDEFINED_SHOCKS[shock_key].description)
         with st.spinner(f"Aplicando shock '{shock_key}'…"):
-            res = run_predefined_shock(
+            res = safe_live_call(
+                run_predefined_shock,
+                cfg,
                 tickers=tuple(cfg.tickers),
                 weights=tuple(cfg.weights),
                 shock_key=shock_key,
@@ -234,7 +243,9 @@ with tab_hyp:
             "cash": sh_cash,
         }
         with st.spinner("Aplicando shock a medida…"):
-            res = run_custom_shock(
+            res = safe_live_call(
+                run_custom_shock,
+                cfg,
                 tickers=tuple(cfg.tickers),
                 weights=tuple(cfg.weights),
                 ticker_to_class=tt_tuple,
@@ -278,7 +289,9 @@ with tab_rev:
 
     # Reverse requiere asset_returns + weights_effective del Nivel 3.
     with st.spinner("Cargando Nivel 3 (Σ histórica)…"):
-        lvl3 = analyze_level3(
+        lvl3 = safe_live_call(
+            analyze_level3,
+            cfg,
             tickers=tuple(cfg.tickers),
             weights=tuple(cfg.weights),
             start=cfg.start_iso,

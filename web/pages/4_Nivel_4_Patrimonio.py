@@ -18,7 +18,12 @@ import streamlit as st  # noqa: E402
 from riskpkg import RiskVisualizer  # noqa: E402
 from riskpkg.levels import Level4_PatrimonyAnalyzer  # noqa: E402
 
-from components.cache import RISKPKG_FIN_VALUE_REF, analyze_level4  # noqa: E402
+from components.cache import (  # noqa: E402
+    RISKPKG_FIN_VALUE_REF,
+    analyze_level4,
+    assert_minimum_window,
+    safe_live_call,
+)
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import (  # noqa: E402
@@ -51,6 +56,7 @@ cfg = get_config()
 if len(cfg.tickers) < 2:
     st.warning("La consolidación patrimonial necesita al menos 2 activos.", icon="⚠️")
     st.stop()
+assert_minimum_window(cfg)
 
 # ── Nota visible explicando el ajuste D4 ────────────────────────────────────
 st.info(
@@ -181,7 +187,9 @@ nf_dicts = tuple(
 )
 
 with st.spinner("Consolidando patrimonio…"):
-    result = analyze_level4(
+    result = safe_live_call(
+        analyze_level4,
+        cfg,
         tickers=tuple(cfg.tickers),
         weights=tuple(cfg.weights),
         start=cfg.start_iso,

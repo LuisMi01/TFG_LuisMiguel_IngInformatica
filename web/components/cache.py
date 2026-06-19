@@ -47,6 +47,54 @@ def ensure_data_source(source: str) -> None:
         demo_data.deactivate()
 
 
+#: Mínimo de sesiones que riskpkg considera fiable (espejo de MIN_OBSERVATIONS).
+MIN_OBSERVATIONS = 252
+
+
+def assert_minimum_window(cfg, min_obs: int = MIN_OBSERVATIONS) -> None:
+    """Aborta la página con mensaje claro si el rango es demasiado corto.
+
+    Cuenta días bursátiles entre ``cfg.start_date`` y ``cfg.end_date`` con
+    ``pd.bdate_range``. Si quedan por debajo de ``min_obs``, muestra un
+    ``st.error`` y llama a ``st.stop()`` — el analizador de riskpkg no llega
+    a ejecutarse, en lugar de propagar su excepción interna a la UI.
+    """
+    n_business = pd.bdate_range(cfg.start_date, cfg.end_date).size
+    if n_business < min_obs:
+        st.error(
+            f"El rango {cfg.start_iso} → {cfg.end_iso} contiene "
+            f"{n_business} días bursátiles; se necesitan al menos {min_obs} "
+            "para calcular métricas fiables. Amplía la ventana en la barra "
+            "lateral.",
+            icon="📏",
+        )
+        st.stop()
+
+
+def safe_live_call(fn, cfg, **kwargs):
+    """Ejecuta ``fn(**kwargs)`` traduciendo fallos en modo live a UI.
+
+    Cuando ``cfg.data_source == "live"`` el analizador de riskpkg puede fallar
+    porque ``yfinance.download`` no responde (sin red, ticker inexistente,
+    Yahoo caído…). En vez de mostrar el traceback al usuario, capturamos
+    cualquier excepción, mostramos un mensaje sugiriendo el modo demo y
+    paramos la página. En modo demo no envolvemos: cualquier error allí
+    indica un bug que sí queremos ver.
+    """
+    if cfg.data_source != "live":
+        return fn(**kwargs)
+    try:
+        return fn(**kwargs)
+    except Exception as exc:  # noqa: BLE001 — yfinance puede lanzar varios tipos
+        st.error(
+            "No se han podido descargar datos desde Yahoo Finance "
+            f"(modo live): `{exc}`. Comprueba la conexión o cambia a "
+            "**Demo (offline)** en la barra lateral.",
+            icon="📡",
+        )
+        st.stop()
+
+
 @st.cache_data(show_spinner=False)
 def load_prices(
     tickers: tuple[str, ...],

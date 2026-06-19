@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import streamlit as st  # noqa: E402
 from riskpkg import RiskVisualizer  # noqa: E402
 
-from components.cache import analyze_level1  # noqa: E402
+from components.cache import analyze_level1, assert_minimum_window, safe_live_call  # noqa: E402
 from components.formatting import metrics_to_table, num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
@@ -30,6 +30,7 @@ if not has_config():
     st.stop()
 
 cfg = get_config()
+assert_minimum_window(cfg)
 
 # ── Selector de activo dentro del universo de la cartera ────────────────────
 ticker = st.selectbox(
@@ -40,7 +41,9 @@ ticker = st.selectbox(
 )
 
 with st.spinner(f"Calculando métricas de {ticker}…"):
-    result = analyze_level1(
+    result = safe_live_call(
+        analyze_level1,
+        cfg,
         ticker=ticker,
         start=cfg.start_iso,
         end=cfg.end_iso,

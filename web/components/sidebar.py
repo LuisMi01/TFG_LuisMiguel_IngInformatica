@@ -73,6 +73,13 @@ def render_sidebar() -> PortfolioConfig:
         )
         tickers = _parse_tickers(raw_tickers)
 
+        if "ANA" in tickers:
+            st.info(
+                "ANA tiene datos disponibles únicamente entre 2018-07 y "
+                "2022-03; la ventana de análisis se ajusta automáticamente.",
+                icon="ℹ️",
+            )
+
         # ── Pesos (uno por ticker) ─────────────────────────────────────────
         st.subheader("Pesos")
         prev = dict(zip(cfg.tickers, cfg.weights))

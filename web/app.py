@@ -66,11 +66,18 @@ st.table(
             "Level4_PatrimonyAnalyzer (clase/liquidez)",
             "stress: histórico · hipotético · reverse",
         ],
+        "Sección memoria": ["§?", "§?", "§?", "§?", "§?"],
     }
 )
+st.caption(
+    "Las referencias `§?` se completan con los números de sección reales del "
+    "documento del TFG."
+)
 
-st.info(
-    "Estado actual: **Fase 0 completada** (andamiaje + cartera en sesión + modo "
-    "demo offline). Las páginas de análisis se implementan en las Fases 1 y 2.",
-    icon="🧱",
+st.success(
+    "Estado actual: **sistema completo**. Las cuatro capas funcionales "
+    "(Niveles 1-4) y el módulo de stress testing están cableadas al motor "
+    "`riskpkg` (v0.5.0, 109 tests en verde). Modo demo offline y modo live "
+    "operativos.",
+    icon="✅",
 )

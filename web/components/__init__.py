@@ -10,3 +10,15 @@ riskpkg (see docs/WEB_SPEC.md rule #1).
 import matplotlib
 
 matplotlib.use("Agg")
+
+# Silencia el ruido cosmético de pandas/numpy cuando un escenario de stress
+# evalúa log(precio) sobre series con NaN truncadas (ANA 2018-07 → 2022-03):
+# no afecta a los resultados — riskpkg ignora esos puntos — pero contamina
+# stderr. Filtro estrictamente acotado al mensaje conocido.
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    category=RuntimeWarning,
+    message="invalid value encountered in log",
+)
