@@ -71,6 +71,33 @@ def assert_minimum_window(cfg, min_obs: int = MIN_OBSERVATIONS) -> None:
         st.stop()
 
 
+def assert_demo_tickers_cached(cfg, additional: tuple[str, ...] = ()) -> None:
+    """Verifica que los tickers solicitados estén en el cache demo offline.
+
+    En modo demo, ``yfinance.download`` se sirve desde ``web/data_cache/``;
+    si el usuario pide un ticker sin parquet, ``DataLoader`` recibe un
+    DataFrame vacío y revienta con ``KeyError`` al buscar ``Close``. Esta
+    guardia detiene la página con un mensaje útil **antes** de llegar a
+    riskpkg, en lugar de mostrar el traceback. En modo live es no-op.
+
+    ``additional`` permite incluir tickers extra (p.ej. el benchmark en
+    Nivel 3) que no forman parte de ``cfg.tickers``.
+    """
+    if cfg.data_source != "demo":
+        return
+    available = demo_data.cached_tickers()
+    needed = list(cfg.tickers) + [t for t in additional if t]
+    missing = [t for t in needed if t not in available]
+    if missing:
+        st.error(
+            f"Modo demo offline: los tickers {missing} no están en el cache "
+            f"local. Disponibles: {sorted(available)}. Edita la lista en la "
+            "barra lateral o cambia a **Live (yfinance)** para descargarlos.",
+            icon="📦",
+        )
+        st.stop()
+
+
 def safe_live_call(fn, cfg, **kwargs):
     """Ejecuta ``fn(**kwargs)`` traduciendo fallos en modo live a UI.
 

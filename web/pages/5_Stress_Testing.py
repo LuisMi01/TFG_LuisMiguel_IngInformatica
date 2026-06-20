@@ -22,6 +22,7 @@ from riskpkg.stress import HISTORICAL_SCENARIOS, PREDEFINED_SHOCKS  # noqa: E402
 
 from components.cache import (  # noqa: E402
     analyze_level3,
+    assert_demo_tickers_cached,
     assert_minimum_window,
     run_custom_shock,
     run_historical_battery,
@@ -55,6 +56,7 @@ if len(cfg.tickers) < 2:
     st.warning("El stress testing necesita al menos 2 activos.", icon="⚠️")
     st.stop()
 assert_minimum_window(cfg)
+assert_demo_tickers_cached(cfg, additional=(cfg.benchmark,))
 
 st.caption(
     f"Valor inicial de referencia: **{INITIAL_VALUE:,.0f} €** "

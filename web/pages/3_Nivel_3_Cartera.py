@@ -14,7 +14,12 @@ import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 from riskpkg import RiskVisualizer  # noqa: E402
 
-from components.cache import analyze_level3, assert_minimum_window, safe_live_call  # noqa: E402
+from components.cache import (  # noqa: E402
+    analyze_level3,
+    assert_demo_tickers_cached,
+    assert_minimum_window,
+    safe_live_call,
+)
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
@@ -39,6 +44,7 @@ if len(cfg.tickers) < 2:
     st.warning("La cartera necesita al menos 2 activos. Añade más tickers.", icon="⚠️")
     st.stop()
 assert_minimum_window(cfg)
+assert_demo_tickers_cached(cfg, additional=(cfg.benchmark,))
 
 with st.spinner(f"Ejecutando Nivel 3 sobre '{cfg.portfolio_name}'…"):
     result = safe_live_call(

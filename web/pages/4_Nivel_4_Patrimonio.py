@@ -21,6 +21,7 @@ from riskpkg.levels import Level4_PatrimonyAnalyzer  # noqa: E402
 from components.cache import (  # noqa: E402
     RISKPKG_FIN_VALUE_REF,
     analyze_level4,
+    assert_demo_tickers_cached,
     assert_minimum_window,
     safe_live_call,
 )
@@ -57,6 +58,7 @@ if len(cfg.tickers) < 2:
     st.warning("La consolidación patrimonial necesita al menos 2 activos.", icon="⚠️")
     st.stop()
 assert_minimum_window(cfg)
+assert_demo_tickers_cached(cfg)
 
 # ── Nota visible explicando el ajuste D4 ────────────────────────────────────
 st.info(
