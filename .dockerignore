@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Excluye del contexto de build todo lo que infla la imagen o introduce ruido
+# entre entornos (venvs locales, caches de tooling, datos descargados que
+# pertenecen al host, etc.). web/data_cache/*.parquet SÍ debe entrar en la
+# imagen: son las series demo que hacen funcionar el modo offline.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Git / IDE / SO
+.git
+.github
+.gitignore
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Entornos virtuales (cubre .venv, .venv-web, .venv_py314_backup, etc.)
+.venv
+.venv*
+venv
+env
+ENV
+
+# Bytecode y artefactos Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build
+dist
+*.egg-info
+.eggs
+
+# Tests / linting / cobertura
+.pytest_cache
+.ruff_cache
+.coverage
+.coverage.*
+htmlcov
+coverage.xml
+.tox
+.nox
+
+# Notebooks: checkpoints de Jupyter (los .py SÍ entran)
+**/.ipynb_checkpoints
+*-checkpoint.ipynb
+
+# Caches de datos del host (NO confundir con web/data_cache/, que sí entra)
+data_cache
+.cache
+
+# Salidas locales generadas durante experimentación
+outputs
+figures/local
+
+# Docker meta (no se necesita dentro de la imagen)
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.yaml

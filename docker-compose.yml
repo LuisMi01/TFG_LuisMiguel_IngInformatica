@@ -1,0 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Lanzador del dashboard del TFG. Comando único, idéntico en Linux/macOS y
+# Windows:
+#
+#     docker compose up
+#
+# Luego abrir http://localhost:8501 en el navegador. No se montan volúmenes
+# de forma intencional: queremos que el código verificado quede congelado
+# dentro de la imagen, no que dependa de un bind-mount del host.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  web:
+    build: .
+    image: tfg-risk-web:0.5.0
+    container_name: tfg-risk-web
+    ports:
+      - "8501:8501"

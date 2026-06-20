@@ -43,6 +43,39 @@ Streamlit** (recorrido visual de los cuatro niveles), los **notebooks**
 (reproducibilidad académica del TFG) y la **API Python** del paquete
 `riskpkg` (uso programático). Todas comparten el mismo motor de cálculo.
 
+### 0 · Ejecución con Docker (recomendado)
+
+Esta es la ruta más rápida y reproducible: garantiza un entorno
+**idéntico bit a bit** entre el equipo principal de desarrollo (Linux) y
+el equipo Windows que se usa como respaldo el día de la defensa, y evita
+los conflictos habituales con la versión de Python, los `venv` y las
+políticas de PEP 668.
+
+**Requisitos previos:** únicamente
+[Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(Windows / macOS) o `docker` + `docker compose` (Linux). No hace falta
+Python, ni `uv`, ni `pip` en el host.
+
+```bash
+git clone https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica.git
+cd TFG_LuisMiguel_IngInformatica
+docker compose up
+```
+
+Tras el primer `build` (la primera vez tarda unos minutos descargando
+dependencias; las siguientes ejecuciones arrancan en segundos), el
+dashboard queda disponible en **`http://localhost:8501`** con la cartera
+demo offline ya cargada. Para detenerlo: `Ctrl+C` en la terminal, o
+`docker compose down` desde otra ventana.
+
+El comando es **el mismo en Linux, macOS y Windows**. La imagen incluye
+las series demo (`web/data_cache/*.parquet`), así que el modo offline
+funciona aunque el contenedor no tenga red.
+
+> Si prefieres una instalación tradicional con `venv` o tienes Docker
+> bloqueado por política corporativa, las secciones siguientes
+> describen el flujo por sistema operativo.
+
 ### 1 · Requisitos
 
 - **Python 3.11** (versión de referencia del proyecto; también validado en
