@@ -20,7 +20,8 @@ import pandas as pd
 import yfinance as yf
 
 # Universo demo (espejo de config/default.yaml) + benchmark.
-DEMO_TICKERS = ["ITX.MC", "AMZN", "TTWO", "ANA", "GLD", "SPY"]
+# Incluye ANA (cartera canónica del TFG) y AAPL (default de la web).
+DEMO_TICKERS = ["ITX.MC", "AMZN", "TTWO", "ANA", "AAPL", "GLD", "SPY"]
 START = "2000-01-01"
 END = "2025-12-31"
 

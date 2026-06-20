@@ -88,7 +88,7 @@ docker compose up
 
 Cuando el log muestra `Uvicorn server started on 0.0.0.0:8501`, abre el
 navegador en **`http://localhost:8501`**. La cartera demo offline
-(`ITX.MC · AMZN · TTWO · ANA · GLD`, 2018-2024) está pre-cargada.
+(`ITX.MC · AMZN · TTWO · AAPL · GLD`, 2018-2024) está pre-cargada.
 
 Para detenerlo: `Ctrl+C` en la misma terminal. Si lo arrancaste en
 segundo plano (`docker compose up -d`), páralo con:
@@ -245,10 +245,11 @@ todas las páginas:
 | **Nivel 4 — Patrimonio** | Integración con activos no financieros, rescalado del notional, descomposición por clase y liquidez |
 | **Stress Testing** | 8 escenarios históricos, 4 hipotéticos (EBA, CCAR, estanflación, +200pb), shock personalizado y reverse stress test |
 
-Por defecto la web arranca en **modo demo offline** con la cartera
-canónica del TFG (`ITX.MC · AMZN · TTWO · ANA · GLD`, 2018-2024). Para
-descargar precios reales basta con cambiar el selector "Origen de datos"
-a "Live (yfinance)" en la barra lateral.
+Por defecto la web arranca en **modo demo offline** con una cartera de
+arranque (`ITX.MC · AMZN · TTWO · AAPL · GLD`, 2018-2024). Si necesitas
+reproducir la cartera canónica del TFG con ANA, sustitúyela en la
+barra lateral. Para descargar precios reales basta con cambiar el
+selector "Origen de datos" a "Live (yfinance)" en la barra lateral.
 
 ### 4 · Modo B — Notebooks
 

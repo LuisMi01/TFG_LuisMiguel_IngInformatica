@@ -26,9 +26,12 @@ STATE_KEY = "portfolio_config"
 
 DataSource = Literal["demo", "live"]
 
-# ── Cartera demo canónica ───────────────────────────────────────────────────
-# Espejo exacto de config/default.yaml y de los notebooks (oráculo de correctitud).
-DEMO_TICKERS = ["ITX.MC", "AMZN", "TTWO", "ANA", "GLD"]
+# ── Cartera demo inicial de la web ──────────────────────────────────────────
+# Default de arranque del dashboard. Reemplaza ANA por AAPL (más conocida y con
+# historia completa desde 2000). La cartera canónica del TFG (con ANA, espejo
+# de config/default.yaml y los notebooks) sigue intacta como referencia
+# académica — el usuario puede recuperarla manualmente en la barra lateral.
+DEMO_TICKERS = ["ITX.MC", "AMZN", "TTWO", "AAPL", "GLD"]
 DEMO_WEIGHTS = [0.30, 0.25, 0.15, 0.20, 0.10]
 DEMO_START = date(2018, 1, 1)
 DEMO_END = date(2024, 12, 31)
@@ -39,7 +42,8 @@ DEMO_TICKER_CLASSES: dict[str, str] = {
     "ITX.MC": "equity",
     "AMZN": "equity",
     "TTWO": "equity",
-    "ANA": "equity",
+    "AAPL": "equity",
+    "ANA": "equity",   # mantenido para que ANA siga clasificable si el usuario la añade
     "GLD": "commodity",
 }
 
