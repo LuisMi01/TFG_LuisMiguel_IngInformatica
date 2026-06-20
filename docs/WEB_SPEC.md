@@ -173,7 +173,7 @@ Trabaja **fase a fase**, haz commit al cerrar cada una, resume lo hecho y **para
 - `components/sidebar.py`: constructor de cartera completo con validación (pesos suman 1, fechas coherentes, mínimo de activos) y selector de fuente `demo`/`live`.
 - `components/cache.py`: wrappers `@st.cache_data` sobre la descarga de datos de `riskpkg.data`.
 - **Modo demo**: script que pre-descarga las series de los casos de prueba a `data_cache/*.parquet`, y carga desde ahí cuando `data_source == "demo"`.
-- **Verificación:** `streamlit run web/app.py` arranca; se define una cartera en el sidebar y el estado persiste al navegar entre páginas; el modo demo carga sin tocar la red.
+- **Verificación:** `streamlit run web/Home.py` arranca; se define una cartera en el sidebar y el estado persiste al navegar entre páginas; el modo demo carga sin tocar la red.
 
 ### Fase 1 — Niveles 1, 2 y 3
 - Implementar las tres páginas consumiendo los analizadores reales de `riskpkg.levels` y las figuras de `riskpkg.viz`.

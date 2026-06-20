@@ -10,9 +10,11 @@ from __future__ import annotations
 
 from datetime import date
 
+import pandas as pd
 import streamlit as st
 
 from .cache import ensure_data_source
+from .data_availability import clear_live_cache, get_availability
 from .state import (
     DEMO_TICKERS,
     DEMO_WEIGHTS,
@@ -114,6 +116,10 @@ def render_sidebar() -> PortfolioConfig:
         else:
             weights = []
 
+        # ── Disponibilidad de datos por ticker ─────────────────────────────
+        if tickers:
+            _render_availability(tickers, source)
+
         # ── Parámetros de mercado ──────────────────────────────────────────
         st.subheader("Parámetros")
         c1, c2 = st.columns(2)
@@ -187,6 +193,40 @@ def render_config_summary() -> None:
         f"**Período:** {cfg.start_iso} → {cfg.end_iso}  ·  "
         f"**Fuente:** {source_label}"
     )
+
+
+def _render_availability(tickers: list[str], source: str) -> None:
+    """Tabla colapsable con la ventana disponible por ticker.
+
+    Demo: lectura directa del parquet (gratis). Live: ``yfinance`` cacheado
+    con ``@st.cache_data``; el botón "Refrescar" invalida el cache para
+    forzar una nueva consulta sin reabrir la app.
+    """
+    with st.expander("📅 Disponibilidad de datos por activo", expanded=False):
+        if source == "live":
+            cols = st.columns([3, 1])
+            cols[0].caption(
+                "Yahoo Finance puede tardar unos segundos la primera vez. "
+                "Los resultados quedan cacheados hasta que pulses Refrescar."
+            )
+            if cols[1].button("Refrescar", use_container_width=True):
+                clear_live_cache()
+                st.rerun()
+        else:
+            st.caption("Rangos leídos directamente del cache offline.")
+
+        rows: list[dict[str, object]] = []
+        for t in tickers:
+            av = get_availability(t, source=source)
+            rows.append(
+                {
+                    "Activo": t,
+                    "Desde": av["first"].date().isoformat() if av else "—",
+                    "Hasta": av["last"].date().isoformat() if av else "—",
+                    "Sesiones": av["n_sessions"] if av else 0,
+                }
+            )
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
 
 
 def _render_validation(tickers: list[str], start_date: date, end_date: date) -> None:

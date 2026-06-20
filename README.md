@@ -230,7 +230,7 @@ añadir lógica financiera. Cubre los cuatro niveles y el módulo de stress.
 Streamlit ya quedó instalado en el paso anterior; basta con lanzar la app:
 
 ```bash
-streamlit run web/app.py
+streamlit run web/Home.py
 ```
 
 Tras unos segundos se abre el dashboard en `http://localhost:8501`. La

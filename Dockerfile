@@ -39,6 +39,6 @@ COPY . .
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "web/app.py", \
+CMD ["streamlit", "run", "web/Home.py", \
      "--server.address", "0.0.0.0", \
      "--server.port", "8501"]
