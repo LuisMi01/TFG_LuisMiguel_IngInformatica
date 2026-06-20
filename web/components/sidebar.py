@@ -29,6 +29,20 @@ _MIN_TRADING_DAYS = 252
 #: Aprox. de sesiones por año natural (para avisar de rangos cortos).
 _TRADING_DAYS_PER_CALENDAR_YEAR = 252 / 365.25
 
+#: Horizontes Monte Carlo expuestos en la sidebar. Etiquetas alineadas con
+#: los marcos regulatorios y académicos más comunes (Basilea, CCAR/EBA,
+#: Hull/Jorion). 252 = 1 año bursátil es el default canónico.
+_MC_DAYS_CHOICES: list[int] = [10, 21, 63, 126, 252, 504, 756]
+_MC_DAYS_LABELS: dict[int, str] = {
+    10:  "10 días — VaR Basel III (FRTB)",
+    21:  "21 días — Mensual",
+    63:  "63 días — Trimestral",
+    126: "126 días — Semestral",
+    252: "252 días — Anual (estándar)",
+    504: "504 días — 2 años (CCAR/EBA)",
+    756: "756 días — 3 años (planificación)",
+}
+
 
 def _parse_tickers(raw: str) -> list[str]:
     """Normaliza una cadena de tickers separados por coma."""
@@ -149,8 +163,30 @@ def render_sidebar() -> PortfolioConfig:
                 index=0 if cfg.return_type == "log" else 1,
             )
             mc_sims = st.number_input(
-                "Monte Carlo — simulaciones", min_value=100, max_value=10000,
+                "Monte Carlo — simulaciones (paths)",
+                min_value=100, max_value=10000,
                 value=cfg.mc_sims, step=100,
+                help=(
+                    "Número de trayectorias. Más sims = bandas de confianza "
+                    "más estrechas en VaR-MC y percentiles P5/P95."
+                ),
+            )
+            mc_days_default_idx = (
+                _MC_DAYS_CHOICES.index(cfg.mc_days)
+                if cfg.mc_days in _MC_DAYS_CHOICES
+                else _MC_DAYS_CHOICES.index(252)
+            )
+            mc_days = st.selectbox(
+                "Monte Carlo — horizonte",
+                options=_MC_DAYS_CHOICES,
+                index=mc_days_default_idx,
+                format_func=lambda d: _MC_DAYS_LABELS[d],
+                help=(
+                    "Días de trading proyectados. 252 = 1 año (estándar "
+                    "académico). Aumentar el horizonte NO mejora la "
+                    "precisión de las colas; para colas más fiables sube el "
+                    "número de simulaciones."
+                ),
             )
             portfolio_name = st.text_input("Nombre de la cartera", value=cfg.portfolio_name)
 
@@ -169,7 +205,7 @@ def render_sidebar() -> PortfolioConfig:
         return_type=return_type,
         portfolio_name=portfolio_name,
         mc_sims=int(mc_sims),
-        mc_days=cfg.mc_days,
+        mc_days=int(mc_days),
         non_financial_assets=cfg.non_financial_assets,  # se editan en Nivel 4
     )
     set_config(new_cfg)
