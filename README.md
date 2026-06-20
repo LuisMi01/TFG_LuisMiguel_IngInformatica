@@ -51,26 +51,71 @@ el equipo Windows que se usa como respaldo el día de la defensa, y evita
 los conflictos habituales con la versión de Python, los `venv` y las
 políticas de PEP 668.
 
-**Requisitos previos:** únicamente
-[Docker Desktop](https://www.docker.com/products/docker-desktop/)
-(Windows / macOS) o `docker` + `docker compose` (Linux). No hace falta
-Python, ni `uv`, ni `pip` en el host.
+#### Requisitos previos
+
+- **Windows / macOS:** instala
+  [Docker Desktop](https://www.docker.com/products/docker-desktop/) y
+  arráncalo una vez (en Windows usa el backend WSL2, opción por defecto
+  desde 2022). No hace falta Python, ni `uv`, ni `pip` en el host.
+- **Linux:** paquetes `docker` y `docker-compose` (en Arch / CachyOS:
+  `sudo pacman -S docker docker-compose`). Adicionalmente:
+
+  ```bash
+  sudo systemctl enable --now docker        # arranca el daemon y lo deja activo al boot
+  sudo usermod -aG docker $USER             # permite usar docker sin sudo
+  ```
+
+  Tras añadirte al grupo `docker`, **cierra sesión y vuelve a entrar**
+  (o reinicia) para que el cambio sea efectivo. Comprueba con
+  `docker info`: si imprime la información del daemon en lugar de
+  `permission denied`, ya está.
+
+#### Flujo completo (Linux / macOS / Windows)
+
+Una vez cumplidos los requisitos previos, el flujo es idéntico en los
+tres sistemas:
 
 ```bash
 git clone https://github.com/LuisMi01/TFG_LuisMiguel_IngInformatica.git
 cd TFG_LuisMiguel_IngInformatica
+
+# (1) Construir la imagen — sólo la primera vez (~1-2 min con red)
+docker compose build
+
+# (2) Arrancar el dashboard en primer plano
 docker compose up
 ```
 
-Tras el primer `build` (la primera vez tarda unos minutos descargando
-dependencias; las siguientes ejecuciones arrancan en segundos), el
-dashboard queda disponible en **`http://localhost:8501`** con la cartera
-demo offline ya cargada. Para detenerlo: `Ctrl+C` en la terminal, o
-`docker compose down` desde otra ventana.
+Cuando el log muestra `Uvicorn server started on 0.0.0.0:8501`, abre el
+navegador en **`http://localhost:8501`**. La cartera demo offline
+(`ITX.MC · AMZN · TTWO · ANA · GLD`, 2018-2024) está pre-cargada.
 
-El comando es **el mismo en Linux, macOS y Windows**. La imagen incluye
-las series demo (`web/data_cache/*.parquet`), así que el modo offline
-funciona aunque el contenedor no tenga red.
+Para detenerlo: `Ctrl+C` en la misma terminal. Si lo arrancaste en
+segundo plano (`docker compose up -d`), páralo con:
+
+```bash
+docker compose down              # para el contenedor y libera el puerto 8501
+```
+
+#### Comandos útiles del día a día
+
+| Acción | Comando |
+|---|---|
+| Construir o reconstruir la imagen | `docker compose build` |
+| Arrancar con build automático si hay cambios | `docker compose up --build` |
+| Arrancar en segundo plano | `docker compose up -d` |
+| Ver logs del contenedor en directo | `docker compose logs -f` |
+| Reconstrucción limpia (ignora cache de capas) | `docker compose build --no-cache` |
+| Parar y eliminar contenedor/red | `docker compose down` |
+| Borrar también la imagen | `docker image rm tfg-risk-web:0.5.0` |
+
+#### Qué se ejecuta exactamente
+
+La imagen es `python:3.11-slim-bookworm` con las dependencias de
+`pyproject.toml` y `streamlit` ya instaladas. Pesa **~1.7 GB** y se
+construye en **~100 s** la primera vez (luego usa cache). Las series
+demo (`web/data_cache/*.parquet`) viajan **dentro** de la imagen, por
+lo que el modo offline funciona aunque el contenedor no tenga red.
 
 > Si prefieres una instalación tradicional con `venv` o tienes Docker
 > bloqueado por política corporativa, las secciones siguientes
