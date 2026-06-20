@@ -53,6 +53,18 @@ with st.spinner(f"Calculando métricas de {ticker}…"):
 
 m = result.metrics
 
+# ── Bloque 0: evolución acumulada del activo ────────────────────────────────
+st.subheader(f"Evolución de {ticker} · {cfg.start_iso} → {cfg.end_iso}")
+st.caption(
+    "Valor de 1€ invertido al inicio del período, compuesto con los "
+    "retornos diarios. Misma serie sobre la que se calculan las métricas."
+)
+show_matplotlib(
+    RiskVisualizer.plot_cumulative_returns,
+    result.returns.to_frame(name=ticker),
+    title=f"Evolución acumulada — {ticker}",
+)
+
 # ── Bloque 1: métricas básicas ──────────────────────────────────────────────
 st.subheader(f"Métricas de {ticker} · {cfg.start_iso} → {cfg.end_iso}")
 c1, c2, c3, c4 = st.columns(4)
