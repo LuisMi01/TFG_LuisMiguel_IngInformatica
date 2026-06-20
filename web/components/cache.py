@@ -33,6 +33,7 @@ from riskpkg.stress import (
 )
 
 from . import demo_data
+from .ticker_names import display_many
 
 
 def ensure_data_source(source: str) -> None:
@@ -89,10 +90,12 @@ def assert_demo_tickers_cached(cfg, additional: tuple[str, ...] = ()) -> None:
     needed = list(cfg.tickers) + [t for t in additional if t]
     missing = [t for t in needed if t not in available]
     if missing:
+        missing_labels = display_many(missing, source="demo")
+        available_labels = display_many(sorted(available), source="demo")
         st.error(
-            f"Modo demo offline: los tickers {missing} no están en el cache "
-            f"local. Disponibles: {sorted(available)}. Edita la lista en la "
-            "barra lateral o cambia a **Live (yfinance)** para descargarlos.",
+            f"Modo demo offline: los activos {missing_labels} no están en el "
+            f"cache local. Disponibles: {available_labels}. Edita la lista en "
+            "la barra lateral o cambia a **Live (yfinance)** para descargarlos.",
             icon="📦",
         )
         st.stop()

@@ -23,6 +23,13 @@ from components.cache import (  # noqa: E402
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
+from components.ticker_names import (  # noqa: E402
+    display_many,
+    display_name,
+    rename_axes,
+    rename_columns,
+    rename_index,
+)
 
 #: Criterio TFG para coherencia RF vs MRC clásico (ver bloque 6 de la memoria).
 SPEARMAN_THRESHOLD = 0.70
@@ -70,10 +77,13 @@ weights_eff = result.weights_effective
 excluded = [t for t in cfg.tickers if t not in tickers_eff]
 if excluded:
     st.warning(
-        f"`riskpkg` excluyó {excluded} por falta de datos en la ventana y renormalizó "
-        f"los pesos. Cartera efectiva: {len(tickers_eff)} activos.",
+        f"`riskpkg` excluyó {display_many(excluded, source=cfg.data_source)} "
+        f"por falta de datos en la ventana y renormalizó los pesos. "
+        f"Cartera efectiva: {len(tickers_eff)} activos.",
         icon="ℹ️",
     )
+
+bench_label = display_name(result.benchmark, source=cfg.data_source) if result.benchmark else ""
 
 # ══════════════════════════════════════════════════════════════════════════
 # Bloque 1 — Métricas agregadas de la cartera
@@ -101,7 +111,7 @@ st.metric(
 # Bloque 2 — Análisis vs benchmark
 # ══════════════════════════════════════════════════════════════════════════
 if result.alpha_beta is not None:
-    st.subheader(f"Análisis vs benchmark ({result.benchmark})")
+    st.subheader(f"Análisis vs benchmark — {bench_label}")
     alpha, beta = result.alpha_beta
     uc, dc = result.up_down_capture
     b1, b2, b3, b4 = st.columns(4)
@@ -115,12 +125,12 @@ if result.alpha_beta is not None:
     b7.metric("Down Capture Ratio", f"{dc:.1f}%")
     if result.bench_metrics is not None:
         b8.metric(
-            f"Sharpe {result.benchmark}",
+            f"Sharpe {bench_label}",
             num(result.bench_metrics["sharpe_ratio"], decimals=2),
         )
 else:
     st.info(
-        f"El benchmark `{result.benchmark}` no estaba disponible en la ventana "
+        f"El benchmark `{bench_label}` no estaba disponible en la ventana "
         "solicitada; se omite el análisis comparativo.",
         icon="ℹ️",
     )
@@ -182,9 +192,9 @@ rf_df = pd.DataFrame(
         "PRC clásico (%)": [float(result.prc[t]) for t in tickers_eff],
         "MRC clásico": [float(result.mrc[t]) for t in tickers_eff],
     },
-    index=list(tickers_eff),
+    index=display_many(tickers_eff, source=cfg.data_source),
 )
-rf_df.index.name = "Ticker"
+rf_df.index.name = "Activo"
 st.dataframe(
     rf_df.style.format(
         {"Importancia RF": "{:.4f}", "PRC clásico (%)": "{:.2f}%", "MRC clásico": "{:.4f}"}
@@ -194,7 +204,8 @@ st.dataframe(
 st.caption(
     f"Random Forest entrenado con walk-forward TS-CV "
     f"({result.rf_results['n_cv_splits']} splits). "
-    f"Ranking RF: {' > '.join(result.rf_results['rf_ranking'])}."
+    f"Ranking RF: "
+    f"{' > '.join(display_many(result.rf_results['rf_ranking'], source=cfg.data_source))}."
 )
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -215,22 +226,30 @@ mc_cols[4].metric("Prob. pérdida", f"{mc['prob_loss']:.1f}%")
 st.subheader("Visualizaciones")
 
 st.markdown("**Retornos acumulados — cartera vs benchmark**")
+bench_renamed = (
+    result.bench_returns.rename(bench_label) if result.bench_returns is not None else None
+)
 show_matplotlib(
     RiskVisualizer.plot_cumulative_returns,
-    result.asset_returns,
+    rename_columns(result.asset_returns, source=cfg.data_source),
     title="Retornos Acumulados — Cartera vs Benchmark",
-    benchmark_returns=result.bench_returns,
+    benchmark_returns=bench_renamed,
 )
 
 st.markdown("**Matriz de correlación**")
-show_matplotlib(RiskVisualizer.plot_correlation_matrix, result.corr_matrix)
+show_matplotlib(
+    RiskVisualizer.plot_correlation_matrix,
+    rename_axes(result.corr_matrix, source=cfg.data_source),
+)
 
 st.markdown("**Atribución del riesgo (MRC / PRC / importancia RF)**")
 show_matplotlib(
     RiskVisualizer.plot_risk_attribution,
-    result.mrc,
-    result.prc,
-    rf_importances=result.rf_results["rf_importances"],
+    rename_index(result.mrc, source=cfg.data_source),
+    rename_index(result.prc, source=cfg.data_source),
+    rf_importances=rename_index(
+        result.rf_results["rf_importances"], source=cfg.data_source
+    ),
 )
 
 st.markdown("**Anomalías detectadas (Isolation Forest)**")
@@ -244,5 +263,5 @@ if result.bench_returns is not None:
     show_matplotlib(
         RiskVisualizer.plot_rolling_metrics,
         result.port_returns,
-        result.bench_returns,
+        bench_renamed,
     )

@@ -23,6 +23,12 @@ from components.cache import (  # noqa: E402
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
+from components.ticker_names import (  # noqa: E402
+    display_many,
+    display_name,
+    rename_axes,
+    rename_index,
+)
 
 st.set_page_config(page_title="Nivel 2 — Fondo", page_icon="💼", layout="wide")
 plt.close("all")
@@ -68,9 +74,9 @@ weights_eff = result.weights_effective
 excluded = [t for t in cfg.tickers if t not in tickers_eff]
 if excluded:
     st.warning(
-        f"`riskpkg` excluyó {excluded} por falta de datos en la ventana solicitada y "
-        f"renormalizó los pesos restantes. La cartera efectiva tiene "
-        f"{len(tickers_eff)} activos.",
+        f"`riskpkg` excluyó {display_many(excluded, source=cfg.data_source)} "
+        f"por falta de datos en la ventana solicitada y renormalizó los pesos "
+        f"restantes. La cartera efectiva tiene {len(tickers_eff)} activos.",
         icon="ℹ️",
     )
 
@@ -110,9 +116,9 @@ mrc_prc = pd.DataFrame(
         "MRC": [float(result.mrc[t]) for t in tickers_eff],
         "PRC (%)": [float(result.prc[t]) for t in tickers_eff],
     },
-    index=list(tickers_eff),
+    index=display_many(tickers_eff, source=cfg.data_source),
 )
-mrc_prc.index.name = "Ticker"
+mrc_prc.index.name = "Activo"
 st.dataframe(
     mrc_prc.style.format(
         {"Peso efectivo": "{:.2%}", "MRC": "{:.4f}", "PRC (%)": "{:.2f}%"}
@@ -127,7 +133,7 @@ with st.expander("Métricas individuales de cada activo (full_report)"):
         am = result.asset_metrics[t]
         rows.append(
             {
-                "Ticker": t,
+                "Activo": display_name(t, source=cfg.data_source),
                 "Retorno anual": pct(am["annual_return"]),
                 "Volatilidad anual": pct(am["volatility_ann"]),
                 "VaR Hist. 95%": num(am["var_hist_95"]),
@@ -140,7 +146,14 @@ with st.expander("Métricas individuales de cada activo (full_report)"):
 
 # ── Bloque 5: figuras ───────────────────────────────────────────────────────
 st.subheader("Atribución del riesgo")
-show_matplotlib(RiskVisualizer.plot_risk_attribution, result.mrc, result.prc)
+show_matplotlib(
+    RiskVisualizer.plot_risk_attribution,
+    rename_index(result.mrc, source=cfg.data_source),
+    rename_index(result.prc, source=cfg.data_source),
+)
 
 st.subheader("Matriz de correlación de activos")
-show_matplotlib(RiskVisualizer.plot_correlation_matrix, result.asset_returns.corr())
+show_matplotlib(
+    RiskVisualizer.plot_correlation_matrix,
+    rename_axes(result.asset_returns.corr(), source=cfg.data_source),
+)

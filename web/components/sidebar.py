@@ -20,6 +20,7 @@ from .state import (
     get_config,
     set_config,
 )
+from .ticker_names import display_many, display_name
 
 #: Mínimo de sesiones que riskpkg considera fiable (MIN_OBSERVATIONS).
 _MIN_TRADING_DAYS = 252
@@ -74,9 +75,10 @@ def render_sidebar() -> PortfolioConfig:
         tickers = _parse_tickers(raw_tickers)
 
         if "ANA" in tickers:
+            ana_label = display_name("ANA", source=source)
             st.info(
-                "ANA tiene datos disponibles únicamente entre 2018-07 y "
-                "2022-03; la ventana de análisis se ajusta automáticamente.",
+                f"{ana_label} tiene datos disponibles únicamente entre 2018-07 "
+                "y 2022-03; la ventana de análisis se ajusta automáticamente.",
                 icon="ℹ️",
             )
 
@@ -89,7 +91,7 @@ def render_sidebar() -> PortfolioConfig:
         for i, ticker in enumerate(tickers):
             with cols[i % 2]:
                 w = st.number_input(
-                    ticker,
+                    display_name(ticker, source=source),
                     min_value=0.0,
                     max_value=1.0,
                     value=float(prev.get(ticker, equal)),
@@ -174,12 +176,16 @@ def render_sidebar() -> PortfolioConfig:
 def render_config_summary() -> None:
     """Muestra una línea-resumen de la cartera activa (para cabecera de páginas)."""
     cfg = get_config()
-    source = "Demo (offline)" if cfg.data_source == "demo" else "Live (yfinance)"
+    source_label = "Demo (offline)" if cfg.data_source == "demo" else "Live (yfinance)"
+    tickers_str = (
+        ", ".join(display_many(cfg.tickers, source=cfg.data_source)) or "—"
+    )
+    bench_str = display_name(cfg.benchmark, source=cfg.data_source) if cfg.benchmark else "—"
     st.caption(
-        f"**Cartera:** {', '.join(cfg.tickers) or '—'}  ·  "
-        f"**Benchmark:** {cfg.benchmark}  ·  "
+        f"**Cartera:** {tickers_str}  ·  "
+        f"**Benchmark:** {bench_str}  ·  "
         f"**Período:** {cfg.start_iso} → {cfg.end_iso}  ·  "
-        f"**Fuente:** {source}"
+        f"**Fuente:** {source_label}"
     )
 
 

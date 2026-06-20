@@ -35,6 +35,7 @@ from components.cache import (  # noqa: E402
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
+from components.ticker_names import display_many  # noqa: E402
 
 #: Valor inicial usado en el notebook 06 (oráculo).
 INITIAL_VALUE = 100_000.0
@@ -114,7 +115,8 @@ with tab_hist:
 
     if res["tickers_excluded"]:
         st.warning(
-            f"Excluidos por falta de datos en la ventana: {res['tickers_excluded']}",
+            "Excluidos por falta de datos en la ventana: "
+            f"{display_many(res['tickers_excluded'], source=cfg.data_source)}",
             icon="ℹ️",
         )
 
@@ -126,9 +128,9 @@ with tab_hist:
                     res["weights_effective"][t] for t in res["tickers_used"]
                 ],
             },
-            index=res["tickers_used"],
+            index=display_many(res["tickers_used"], source=cfg.data_source),
         )
-        df.index.name = "Ticker"
+        df.index.name = "Activo"
         st.dataframe(
             df.style.format({"P&L": "{:.2%}", "Peso efectivo": "{:.2%}"}),
             use_container_width=True,
@@ -271,9 +273,9 @@ with tab_hyp:
             "Shock aplicado": [res["asset_shocks"][t] for t in cfg.tickers],
             "Contribución (€)": [res["asset_contributions"][t] for t in cfg.tickers],
         },
-        index=list(cfg.tickers),
+        index=display_many(cfg.tickers, source=cfg.data_source),
     )
-    df.index.name = "Ticker"
+    df.index.name = "Activo"
     st.dataframe(
         df.style.format({"Shock aplicado": "{:.2%}", "Contribución (€)": "{:,.0f} €"}),
         use_container_width=True,
@@ -337,9 +339,9 @@ with tab_rev:
 
     shock_df = pd.DataFrame(
         {"Shock óptimo (s*)": rev["shock_vector"].values},
-        index=list(rev["shock_vector"].index),
+        index=display_many(rev["shock_vector"].index, source=cfg.data_source),
     )
-    shock_df.index.name = "Ticker"
+    shock_df.index.name = "Activo"
     st.dataframe(
         shock_df.style.format({"Shock óptimo (s*)": "{:.4%}"}),
         use_container_width=True,

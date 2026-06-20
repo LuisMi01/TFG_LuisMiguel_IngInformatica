@@ -22,6 +22,7 @@ from components.cache import (  # noqa: E402
 from components.formatting import metrics_to_table, num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
+from components.ticker_names import display_name  # noqa: E402
 
 st.set_page_config(page_title="Nivel 1 — Activo", page_icon="📈", layout="wide")
 plt.close("all")  # barrer cualquier figura residual antes de renderizar
@@ -43,10 +44,12 @@ ticker = st.selectbox(
     "Activo a analizar",
     options=cfg.tickers,
     index=0,
+    format_func=lambda t: display_name(t, source=cfg.data_source),
     help="Cada activo se analiza de forma aislada (sin pesos de cartera).",
 )
+ticker_label = display_name(ticker, source=cfg.data_source)
 
-with st.spinner(f"Calculando métricas de {ticker}…"):
+with st.spinner(f"Calculando métricas de {ticker_label}…"):
     result = safe_live_call(
         analyze_level1,
         cfg,
@@ -60,19 +63,19 @@ with st.spinner(f"Calculando métricas de {ticker}…"):
 m = result.metrics
 
 # ── Bloque 0: evolución acumulada del activo ────────────────────────────────
-st.subheader(f"Evolución de {ticker} · {cfg.start_iso} → {cfg.end_iso}")
+st.subheader(f"Evolución de {ticker_label} · {cfg.start_iso} → {cfg.end_iso}")
 st.caption(
     "Valor de 1€ invertido al inicio del período, compuesto con los "
     "retornos diarios. Misma serie sobre la que se calculan las métricas."
 )
 show_matplotlib(
     RiskVisualizer.plot_cumulative_returns,
-    result.returns.to_frame(name=ticker),
-    title=f"Evolución acumulada — {ticker}",
+    result.returns.to_frame(name=ticker_label),
+    title=f"Evolución acumulada — {ticker_label}",
 )
 
 # ── Bloque 1: métricas básicas ──────────────────────────────────────────────
-st.subheader(f"Métricas de {ticker} · {cfg.start_iso} → {cfg.end_iso}")
+st.subheader(f"Métricas de {ticker_label} · {cfg.start_iso} → {cfg.end_iso}")
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Retorno anual", pct(m["annual_return"]))
 c2.metric("Volatilidad anual", pct(m["volatility_ann"]))
@@ -154,4 +157,4 @@ if "interpretation" in k:
 
 # ── Bloque 5: distribución de retornos + VaR ────────────────────────────────
 st.subheader("Distribución de retornos y VaR")
-show_matplotlib(RiskVisualizer.plot_var_distribution, result.returns, label=ticker)
+show_matplotlib(RiskVisualizer.plot_var_distribution, result.returns, label=ticker_label)
