@@ -23,12 +23,7 @@ from components.cache import (  # noqa: E402
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
-from components.ticker_names import (  # noqa: E402
-    display_many,
-    display_name,
-    rename_axes,
-    rename_index,
-)
+from components.ticker_names import display_many, display_name  # noqa: E402
 
 st.set_page_config(page_title="Nivel 2 — Fondo", page_icon="💼", layout="wide")
 plt.close("all")
@@ -146,14 +141,7 @@ with st.expander("Métricas individuales de cada activo (full_report)"):
 
 # ── Bloque 5: figuras ───────────────────────────────────────────────────────
 st.subheader("Atribución del riesgo")
-show_matplotlib(
-    RiskVisualizer.plot_risk_attribution,
-    rename_index(result.mrc, source=cfg.data_source),
-    rename_index(result.prc, source=cfg.data_source),
-)
+show_matplotlib(RiskVisualizer.plot_risk_attribution, result.mrc, result.prc)
 
 st.subheader("Matriz de correlación de activos")
-show_matplotlib(
-    RiskVisualizer.plot_correlation_matrix,
-    rename_axes(result.asset_returns.corr(), source=cfg.data_source),
-)
+show_matplotlib(RiskVisualizer.plot_correlation_matrix, result.asset_returns.corr())

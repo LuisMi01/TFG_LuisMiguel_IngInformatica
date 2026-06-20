@@ -70,8 +70,8 @@ st.caption(
 )
 show_matplotlib(
     RiskVisualizer.plot_cumulative_returns,
-    result.returns.to_frame(name=ticker_label),
-    title=f"Evolución acumulada — {ticker_label}",
+    result.returns.to_frame(name=ticker),
+    title=f"Evolución acumulada — {ticker}",
 )
 
 # ── Bloque 1: métricas básicas ──────────────────────────────────────────────
@@ -157,4 +157,4 @@ if "interpretation" in k:
 
 # ── Bloque 5: distribución de retornos + VaR ────────────────────────────────
 st.subheader("Distribución de retornos y VaR")
-show_matplotlib(RiskVisualizer.plot_var_distribution, result.returns, label=ticker_label)
+show_matplotlib(RiskVisualizer.plot_var_distribution, result.returns, label=ticker)

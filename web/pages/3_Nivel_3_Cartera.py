@@ -23,13 +23,7 @@ from components.cache import (  # noqa: E402
 from components.formatting import num, pct, show_matplotlib  # noqa: E402
 from components.sidebar import render_config_summary, render_sidebar  # noqa: E402
 from components.state import get_config, has_config  # noqa: E402
-from components.ticker_names import (  # noqa: E402
-    display_many,
-    display_name,
-    rename_axes,
-    rename_columns,
-    rename_index,
-)
+from components.ticker_names import display_many, display_name  # noqa: E402
 
 #: Criterio TFG para coherencia RF vs MRC clásico (ver bloque 6 de la memoria).
 SPEARMAN_THRESHOLD = 0.70
@@ -226,30 +220,22 @@ mc_cols[4].metric("Prob. pérdida", f"{mc['prob_loss']:.1f}%")
 st.subheader("Visualizaciones")
 
 st.markdown("**Retornos acumulados — cartera vs benchmark**")
-bench_renamed = (
-    result.bench_returns.rename(bench_label) if result.bench_returns is not None else None
-)
 show_matplotlib(
     RiskVisualizer.plot_cumulative_returns,
-    rename_columns(result.asset_returns, source=cfg.data_source),
+    result.asset_returns,
     title="Retornos Acumulados — Cartera vs Benchmark",
-    benchmark_returns=bench_renamed,
+    benchmark_returns=result.bench_returns,
 )
 
 st.markdown("**Matriz de correlación**")
-show_matplotlib(
-    RiskVisualizer.plot_correlation_matrix,
-    rename_axes(result.corr_matrix, source=cfg.data_source),
-)
+show_matplotlib(RiskVisualizer.plot_correlation_matrix, result.corr_matrix)
 
 st.markdown("**Atribución del riesgo (MRC / PRC / importancia RF)**")
 show_matplotlib(
     RiskVisualizer.plot_risk_attribution,
-    rename_index(result.mrc, source=cfg.data_source),
-    rename_index(result.prc, source=cfg.data_source),
-    rf_importances=rename_index(
-        result.rf_results["rf_importances"], source=cfg.data_source
-    ),
+    result.mrc,
+    result.prc,
+    rf_importances=result.rf_results["rf_importances"],
 )
 
 st.markdown("**Anomalías detectadas (Isolation Forest)**")
@@ -263,5 +249,5 @@ if result.bench_returns is not None:
     show_matplotlib(
         RiskVisualizer.plot_rolling_metrics,
         result.port_returns,
-        bench_renamed,
+        result.bench_returns,
     )
